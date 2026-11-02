@@ -243,6 +243,15 @@ jq -n \
           runOrder: 1
         }]
       }
+    ],
+    triggers: [
+      {
+        providerType: "CodeStarSourceConnection",
+        gitConfiguration: {
+          sourceActionName: "DescargarDesdeGitHub",
+          push: [ { branches: { includes: [$rama] } } ]
+        }
+      }
     ]
   }
 }' > "$GENERADO/pipeline.json"

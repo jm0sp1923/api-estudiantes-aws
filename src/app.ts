@@ -53,6 +53,7 @@ export function crearApp(
       entorno: process.env.NODE_ENV ?? "desarrollo",
       version: process.env.npm_package_version ?? "1.0.0",
       tiempoActivoSegundos: Math.round(process.uptime()),
+      region: process.env.AWS_REGION ?? "us-east-1",
     });
   });
 
