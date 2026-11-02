@@ -1,0 +1,46 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EscribirRegistrosDeCompilacion",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:REGION:ID_CUENTA:log-group:/aws/codebuild/*"
+    },
+    {
+      "Sid": "LeerYEscribirArtefactosDelPipeline",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:PutObject",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": "arn:aws:s3:::BUCKET_ARTEFACTOS/*"
+    },
+    {
+      "Sid": "ObtenerCredencialesDeEcr",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "PublicarLaImagenSoloEnElRepositorioDelProyecto",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:CompleteLayerUpload",
+        "ecr:InitiateLayerUpload",
+        "ecr:PutImage",
+        "ecr:UploadLayerPart",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+      ],
+      "Resource": "arn:aws:ecr:REGION:ID_CUENTA:repository/api-estudiantes"
+    }
+  ]
+}

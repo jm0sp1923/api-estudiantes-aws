@@ -1,0 +1,62 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "GestionarLosArtefactosEntreEtapas",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:GetBucketVersioning",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::BUCKET_ARTEFACTOS",
+        "arn:aws:s3:::BUCKET_ARTEFACTOS/*"
+      ]
+    },
+    {
+      "Sid": "UsarLaConexionDeGitHub",
+      "Effect": "Allow",
+      "Action": [
+        "codestar-connections:UseConnection",
+        "codeconnections:UseConnection"
+      ],
+      "Resource": "ARN_CONEXION"
+    },
+    {
+      "Sid": "LanzarLaCompilacion",
+      "Effect": "Allow",
+      "Action": [
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild"
+      ],
+      "Resource": "arn:aws:codebuild:REGION:ID_CUENTA:project/construccion-api-estudiantes"
+    },
+    {
+      "Sid": "DesplegarEnElServicioDeEcs",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeServices",
+        "ecs:DescribeTaskDefinition",
+        "ecs:DescribeTasks",
+        "ecs:ListTasks",
+        "ecs:RegisterTaskDefinition",
+        "ecs:UpdateService",
+        "ecs:TagResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "EntregarElRolDeEjecucionALaNuevaDefinicionDeTarea",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::ID_CUENTA:role/ecsTaskExecutionRole",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "ecs-tasks.amazonaws.com"
+        }
+      }
+    }
+  ]
+}

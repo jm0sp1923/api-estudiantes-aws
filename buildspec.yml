@@ -1,0 +1,55 @@
+# =============================================================================
+# buildspec.yml - instrucciones que AWS CodeBuild ejecuta en cada compilacion
+#
+# Tres fases:
+#   pre_build  : inicia sesion en ECR y calcula la etiqueta de la imagen
+#   build      : verifica tipos y construye la imagen de Docker
+#   post_build : publica la imagen y escribe imagedefinitions.json
+#
+# El artefacto imagedefinitions.json es el contrato con la etapa de
+# despliegue: le indica a CodePipeline que contenedor de la definicion de
+# tarea debe apuntar a que imagen.
+# =============================================================================
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: us-east-1
+    REPO: api-estudiantes
+    CONTENEDOR: api-estudiantes
+
+phases:
+  pre_build:
+    commands:
+      - echo "=== Iniciando sesion en Amazon ECR ==="
+      - ID_CUENTA=$(aws sts get-caller-identity --query Account --output text)
+      - REGISTRO=$ID_CUENTA.dkr.ecr.$AWS_REGION.amazonaws.com
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REGISTRO
+      # La etiqueta son los siete primeros caracteres del commit: cada imagen
+      # queda ligada de forma inequivoca al codigo que la produjo.
+      - ETIQUETA=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
+      - echo "Commit $CODEBUILD_RESOLVED_SOURCE_VERSION con etiqueta $ETIQUETA"
+
+  build:
+    commands:
+      - echo "=== Instalando dependencias y verificando tipos ==="
+      - npm ci
+      - npx tsc --noEmit
+      - echo "=== Construyendo la imagen de Docker ==="
+      # --platform linux/amd64 garantiza la arquitectura que ejecuta Fargate
+      - docker build --platform linux/amd64 --provenance=false -t $REPO:$ETIQUETA .
+      - docker tag $REPO:$ETIQUETA $REGISTRO/$REPO:$ETIQUETA
+      - docker tag $REPO:$ETIQUETA $REGISTRO/$REPO:latest
+
+  post_build:
+    commands:
+      - echo "=== Publicando la imagen en ECR ==="
+      - docker push $REGISTRO/$REPO:$ETIQUETA
+      - docker push $REGISTRO/$REPO:latest
+      - echo "=== Generando el artefacto para la etapa de despliegue ==="
+      - printf '[{"name":"%s","imageUri":"%s"}]' "$CONTENEDOR" "$REGISTRO/$REPO:$ETIQUETA" > imagedefinitions.json
+      - cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
